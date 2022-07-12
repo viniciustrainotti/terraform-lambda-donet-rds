@@ -1,5 +1,5 @@
 resource "aws_db_parameter_group" "this" {
-  name   = "lambda"
+  name   = "${var.environment}-lambda"
   family = "postgres14"
 
   parameter {
@@ -9,7 +9,7 @@ resource "aws_db_parameter_group" "this" {
 }
 
 resource "aws_db_subnet_group" "subg" {
-  name       = "subnet group db instance"
+  name       = "${var.environment} subnet group db instance"
   subnet_ids = [aws_subnet.subnet_private[0].id, aws_subnet.subnet_private[1].id]
 
   depends_on = [
@@ -19,7 +19,8 @@ resource "aws_db_subnet_group" "subg" {
   tags = merge(
     local.common_tags,
     {
-      Name = "subnet group db instance"
+      Name = "${var.environment} subnet group db instance"
+      Environment = "${var.environment}"
     }
   )
 }
@@ -43,7 +44,8 @@ resource "aws_db_instance" "this" {
   tags = merge(
     local.common_tags,
     {
-      Name = "dblambda"
+      Name = "${var.environment} dblambda"
+      Environment = "${var.environment}"
     }
   )
 }

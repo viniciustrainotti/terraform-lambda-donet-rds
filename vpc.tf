@@ -6,7 +6,7 @@ resource "aws_vpc" "main" {
   tags = merge(
     local.common_tags,
     {
-      Name = "lambda_vpc"
+      Name = "${var.environment}-lambda-vpc"
     }
   )
 }
@@ -21,28 +21,28 @@ resource "aws_subnet" "subnet_private" {
   tags = merge(
     local.common_tags,
     {
-      Name = "lambda_subnet_private_${count.index}"
+      Name = "${var.environment}-lambda-subnet-private-${count.index}"
     }
   )
 }
 
-resource "aws_security_group" "sg_rds" {
-  name        = "sg_rds"
-  description = "security group for private db"
-  vpc_id      = aws_vpc.main.id
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
 
-  ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    description = "PostgreSQL access from within VPC"
-    cidr_blocks = [aws_vpc.main.cidr_block]
+  tags = {
+    Name        = "${var.environment}-lambda-private-route-table"
+    Environment = "${var.environment}"
   }
+}
 
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "lambda_sg"
-    }
-  )
+resource "aws_route" "private_nat_gateway" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat.id
+}
+
+resource "aws_route_table_association" "private" {
+  count          = length(local.cidr_blocks)
+  subnet_id      = element(aws_subnet.subnet_private.*.id, count.index)
+  route_table_id = aws_route_table.private.id
 }
