@@ -10,7 +10,11 @@ resource "aws_db_parameter_group" "this" {
 
 resource "aws_db_subnet_group" "subg" {
   name       = "subnet group db instance"
-  subnet_ids = [aws_subnet.subnet_private.id, aws_subnet.subnet_private_1.id]
+  subnet_ids = [aws_subnet.subnet_private[0].id, aws_subnet.subnet_private[1].id]
+
+  depends_on = [
+    aws_subnet.subnet_private
+  ]
 
   tags = merge(
     local.common_tags,

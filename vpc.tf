@@ -12,29 +12,16 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "subnet_private" {
+  count = length(local.cidr_blocks)
   vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.1.0/24"
+  cidr_block = local.cidr_blocks[count.index]
 
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = merge(
     local.common_tags,
     {
-      Name = "lambda_subnet_private"
-    }
-  )
-}
-
-resource "aws_subnet" "subnet_private_1" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.2.0/24"
-
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "lambda_subnet_private_1"
+      Name = "lambda_subnet_private_${count.index}"
     }
   )
 }
